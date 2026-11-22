@@ -1,23 +1,53 @@
+using InvernAppApi.Api.Middleware;
+using System.Text.Json.Serialization;
+
 var builder = WebApplication.CreateBuilder(args);
 
-// Add services to the container.
+// Controllers + JSON (los enums se serializan como texto, ej. "TURN_PUMP_ON")
+builder.Services
+    .AddControllers()
+    .AddJsonOptions(options =>
+    {
+        options.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter());
+    });
 
-builder.Services.AddControllers();
-// Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
+// Documento OpenAPI nativo de .NET 10
 builder.Services.AddOpenApi();
+
+// Manejo global de errores
+builder.Services.AddProblemDetails();
+builder.Services.AddExceptionHandler<GlobalExceptionHandler>();
 
 var app = builder.Build();
 
-// Configure the HTTP request pipeline.
+app.UseExceptionHandler();
+
 if (app.Environment.IsDevelopment())
 {
     app.MapOpenApi();
+    app.UseSwaggerUI(options =>
+    {
+        options.SwaggerEndpoint("/openapi/v1.json", "InvernApp API v1");
+    });
+}
+else
+{
+    // En desarrollo el ESP32 usará HTTP en la red local; se revisa en la Fase 11.
+    app.UseHttpsRedirection();
 }
 
-app.UseHttpsRedirection();
-
-app.UseAuthorization();
+// Dashboard estático (wwwroot/index.html, Fase 10)
+app.UseDefaultFiles();
+app.UseStaticFiles();
 
 app.MapControllers();
+
+// Verificación rápida de que la API está viva
+app.MapGet("/health", () => Results.Ok(new
+{
+    status = "OK",
+    service = "InvernApp.Api",
+    timestampUtc = DateTime.UtcNow
+}));
 
 app.Run();
