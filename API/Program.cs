@@ -1,7 +1,21 @@
+using InvernApp.Api.Data;
 using InvernAppApi.Api.Middleware;
+using Microsoft.EntityFrameworkCore;
 using System.Text.Json.Serialization;
 
 var builder = WebApplication.CreateBuilder(args);
+
+// Base de datos (SQL Server). Falla al arrancar si falta la cadena de conexión.
+var connectionString = builder.Configuration.GetConnectionString("InvernAppDb");
+if (string.IsNullOrWhiteSpace(connectionString))
+{
+    throw new InvalidOperationException(
+        "Falta la cadena de conexión 'InvernAppDb'. Defínela en appsettings.Development.json " +
+        "o en la variable de entorno ConnectionStrings__InvernAppDb.");
+}
+
+builder.Services.AddDbContext<InvernAppDbContext>(options =>
+    options.UseSqlServer(connectionString));
 
 // Controllers + JSON (los enums se serializan como texto, ej. "TURN_PUMP_ON")
 builder.Services

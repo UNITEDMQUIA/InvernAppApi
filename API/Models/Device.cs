@@ -1,4 +1,4 @@
-﻿using API.Models;
+﻿using InvernApp.Api.Models;
 using static Microsoft.EntityFrameworkCore.DbLoggerCategory.Database;
 
 namespace InvernApp.Api.Models;
