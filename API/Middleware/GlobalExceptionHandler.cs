@@ -1,11 +1,12 @@
-﻿using Microsoft.AspNetCore.Diagnostics;
+﻿using InvernApp.Api.Exceptions;
+using Microsoft.AspNetCore.Diagnostics;
 using Microsoft.AspNetCore.Mvc;
 
-namespace InvernAppApi.Api.Middleware;
+namespace InvernApp.Api.Middleware;
 
 /// <summary>
-/// Captura cualquier excepción no controlada, la registra en el log
-/// y devuelve una respuesta 500 uniforme (ProblemDetails) sin exponer detalles internos.
+/// Captura las excepciones no resueltas por los controllers y devuelve una respuesta uniforme (ProblemDetails):
+/// ConflictException → 409; cualquier otra → 500 sin exponer detalles internos.
 /// </summary>
 public class GlobalExceptionHandler : IExceptionHandler
 {
@@ -25,20 +26,45 @@ public class GlobalExceptionHandler : IExceptionHandler
         Exception exception,
         CancellationToken cancellationToken)
     {
-        _logger.LogError(
-            exception,
-            "Excepción no controlada en {Method} {Path} (TraceId: {TraceId})",
-            httpContext.Request.Method,
-            httpContext.Request.Path,
-            httpContext.TraceIdentifier);
+        var (status, title, detail) = exception switch
+        {
+            ConflictException conflict => (
+                StatusCodes.Status409Conflict,
+                "Conflicto",
+                conflict.Message),
 
-        httpContext.Response.StatusCode = StatusCodes.Status500InternalServerError;
+            _ => (
+                StatusCodes.Status500InternalServerError,
+                "Error interno del servidor",
+                "Ocurrió un error inesperado. Consulte los registros del servidor.")
+        };
+
+        if (status == StatusCodes.Status500InternalServerError)
+        {
+            _logger.LogError(
+                exception,
+                "Excepción no controlada en {Method} {Path} (TraceId: {TraceId})",
+                httpContext.Request.Method,
+                httpContext.Request.Path,
+                httpContext.TraceIdentifier);
+        }
+        else
+        {
+            _logger.LogWarning(
+                "{Title} en {Method} {Path}: {Detail}",
+                title,
+                httpContext.Request.Method,
+                httpContext.Request.Path,
+                detail);
+        }
+
+        httpContext.Response.StatusCode = status;
 
         var problem = new ProblemDetails
         {
-            Status = StatusCodes.Status500InternalServerError,
-            Title = "Error interno del servidor",
-            Detail = "Ocurrió un error inesperado. Consulte los registros del servidor."
+            Status = status,
+            Title = title,
+            Detail = detail
         };
         problem.Extensions["traceId"] = httpContext.TraceIdentifier;
 

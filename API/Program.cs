@@ -1,7 +1,8 @@
-using InvernApp.Api.Data;
-using InvernAppApi.Api.Middleware;
-using Microsoft.EntityFrameworkCore;
 using System.Text.Json.Serialization;
+using InvernApp.Api.Data;
+using InvernApp.Api.Middleware;
+using InvernApp.Api.Services;
+using Microsoft.EntityFrameworkCore;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -16,6 +17,9 @@ if (string.IsNullOrWhiteSpace(connectionString))
 
 builder.Services.AddDbContext<InvernAppDbContext>(options =>
     options.UseSqlServer(connectionString));
+
+// Servicios de la aplicación
+builder.Services.AddScoped<IDeviceService, DeviceService>();
 
 // Controllers + JSON (los enums se serializan como texto, ej. "TURN_PUMP_ON")
 builder.Services
