@@ -6,7 +6,8 @@ namespace InvernApp.Api.Middleware;
 
 /// <summary>
 /// Captura las excepciones no resueltas por los controllers y devuelve una respuesta uniforme (ProblemDetails):
-/// ConflictException → 409; cualquier otra → 500 sin exponer detalles internos.
+/// BadRequestException → 400, NotFoundException → 404, ConflictException → 409;
+/// cualquier otra → 500 sin exponer detalles internos.
 /// </summary>
 public class GlobalExceptionHandler : IExceptionHandler
 {
@@ -28,6 +29,16 @@ public class GlobalExceptionHandler : IExceptionHandler
     {
         var (status, title, detail) = exception switch
         {
+            BadRequestException bad => (
+                StatusCodes.Status400BadRequest,
+                "Solicitud inválida",
+                bad.Message),
+
+            NotFoundException notFound => (
+                StatusCodes.Status404NotFound,
+                "Recurso no encontrado",
+                notFound.Message),
+
             ConflictException conflict => (
                 StatusCodes.Status409Conflict,
                 "Conflicto",
