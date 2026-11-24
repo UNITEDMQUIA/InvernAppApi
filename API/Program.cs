@@ -36,6 +36,7 @@ builder.Services.AddOpenApi();
 // Manejo global de errores
 builder.Services.AddProblemDetails();
 builder.Services.AddExceptionHandler<GlobalExceptionHandler>();
+builder.Services.AddScoped<IConfigurationService, ConfigurationService>();
 
 var app = builder.Build();
 
