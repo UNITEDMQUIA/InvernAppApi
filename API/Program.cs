@@ -21,6 +21,9 @@ builder.Services.AddDbContext<InvernAppDbContext>(options =>
 // Servicios de la aplicación
 builder.Services.AddScoped<IDeviceService, DeviceService>();
 builder.Services.AddScoped<IMeasurementService, MeasurementService>();
+builder.Services.AddScoped<IConfigurationService, ConfigurationService>();
+builder.Services.AddScoped<IAutomationService, AutomationService>();
+builder.Services.AddScoped<ICommandService, CommandService>();
 
 // Controllers + JSON (los enums se serializan como texto, ej. "TURN_PUMP_ON")
 builder.Services

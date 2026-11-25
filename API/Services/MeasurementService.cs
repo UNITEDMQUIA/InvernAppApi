@@ -25,10 +25,15 @@ public class MeasurementService : IMeasurementService
 
     private readonly InvernAppDbContext _db;
     private readonly ILogger<MeasurementService> _logger;
+    private readonly IAutomationService _automationService;
 
-    public MeasurementService(InvernAppDbContext db, ILogger<MeasurementService> logger)
+    public MeasurementService(
+    InvernAppDbContext db,
+    IAutomationService automationService,
+    ILogger<MeasurementService> logger)
     {
         _db = db;
+        _automationService = automationService;
         _logger = logger;
     }
 
@@ -124,6 +129,18 @@ public class MeasurementService : IMeasurementService
             "Suelo={SoilHumidity} (simulado: {Simulated}) L={Luminosity}",
             deviceId, sequenceNumber, measurement.Temperature, measurement.AirHumidity,
             measurement.SoilHumidity, measurement.IsSoilHumiditySimulated, measurement.Luminosity);
+
+        try
+        {
+            await _automationService.EvaluateAsync(measurement, cancellationToken);
+        }
+        catch (Exception ex) when (ex is not OperationCanceledException)
+        {
+            _logger.LogError(
+                ex,
+                "Error al evaluar la automatización de la medición {DeviceId} #{SequenceNumber}; la medición quedó guardada",
+                deviceId, sequenceNumber);
+        }
 
         return ToResponse(measurement);
     }
