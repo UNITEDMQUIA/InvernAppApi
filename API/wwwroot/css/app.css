@@ -1,0 +1,25 @@
+﻿.metric-value {
+    font-size: 2rem;
+    font-weight: 600;
+    line-height: 1.2;
+}
+
+    .metric-value small {
+        font-size: 1rem;
+        font-weight: 400;
+        color: #6c757d;
+    }
+
+.chart-box {
+    position: relative;
+    height: 250px;
+}
+
+.events-scroll {
+    max-height: 520px;
+    overflow: auto;
+}
+
+    .events-scroll td {
+        font-size: 0.875rem;
+    }
